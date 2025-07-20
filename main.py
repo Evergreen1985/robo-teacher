@@ -1,43 +1,39 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, Request, UploadFile, File
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 import speech_recognition as sr
 from gtts import gTTS
 import os
+import uuid
 
 app = FastAPI()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-@app.get("/")
-def home():
-    return FileResponse("static/index.html")
+@app.post("/mic-upload")
+async def mic_upload(file: UploadFile = File(...)):
+    temp_input_path = f"temp_{uuid.uuid4()}.wav"
+    temp_output_path = f"static/response_{uuid.uuid4()}.mp3"
 
-@app.post("/listen/")
-async def listen(audio: UploadFile = File(...)):
+    with open(temp_input_path, "wb") as f:
+        f.write(await file.read())
+
+    # Speech Recognition
     recognizer = sr.Recognizer()
-    audio_path = "temp.wav"
-    output_path = "static/output.mp3"
-
-    with open(audio_path, "wb") as buffer:
-        buffer.write(await audio.read())
-
-    with sr.AudioFile(audio_path) as source:
-        audio_data = recognizer.record(source)
+    with sr.AudioFile(temp_input_path) as source:
+        audio = recognizer.record(source)
         try:
-            text = recognizer.recognize_google(audio_data)
+            text = recognizer.recognize_google(audio)
         except Exception as e:
-            return {"error": "Speech recognition failed", "details": str(e)}
+            text = "Sorry, I didn't catch that."
 
-    # Simple response logic (can be extended with AI)
-    response_text = f"You said: {text}"
+    # Convert response to voice
+    tts = gTTS(text=text)
+    tts.save(temp_output_path)
 
-    # Convert to speech and save
-    tts = gTTS(response_text)
-    tts.save(output_path)
+    os.remove(temp_input_path)
 
-    # Return URL to access audio reply
     return JSONResponse(content={
-        "text": response_text,
-        "voice_url": "/static/output.mp3"
+        "text": text,
+        "audio_url": f"/static/{os.path.basename(temp_output_path)}"
     })
