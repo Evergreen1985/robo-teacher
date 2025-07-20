@@ -1,49 +1,40 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Robo Teacher Voice</title>
+  <meta charset="UTF-8">
+  <title>Robo Teacher Voice Test</title>
 </head>
 <body>
-  <h2>🎙️ Speak to Robo Teacher</h2>
-  <button onclick="startRecording()">Start Recording</button>
-  <button onclick="stopRecording()">Stop & Send</button>
-  <p id="status"></p>
-  <audio id="replyAudio" controls></audio>
+  <h2>Upload a Valid WAV File</h2>
+  <form id="uploadForm" enctype="multipart/form-data">
+    <input type="file" name="audio" accept=".wav" required>
+    <button type="submit">Upload & Listen</button>
+  </form>
+
+  <h3 id="responseText"></h3>
+  <audio id="audioPlayer" controls style="display: none;"></audio>
 
   <script>
-    let mediaRecorder;
-    let audioChunks = [];
+    document.getElementById("uploadForm").onsubmit = async function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
 
-    async function startRecording() {
-      document.getElementById("status").innerText = "Recording...";
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorder = new MediaRecorder(stream);
-      mediaRecorder.start();
+      const res = await fetch("/listen/", {
+        method: "POST",
+        body: formData,
+      });
 
-      mediaRecorder.ondataavailable = event => {
-        audioChunks.push(event.data);
-      };
-    }
-
-    function stopRecording() {
-      document.getElementById("status").innerText = "Processing...";
-      mediaRecorder.stop();
-
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-        const formData = new FormData();
-        formData.append('audio', audioBlob, 'input.wav');
-
-        const response = await fetch('/listen/', {
-          method: 'POST',
-          body: formData
-        });
-
-        const result = await response.json();
-        document.getElementById("status").innerText = "Robo replied!";
-        document.getElementById("replyAudio").src = result.voice_url;
-      };
-    }
+      const result = await res.json();
+      if (result.text) {
+        document.getElementById("responseText").innerText = result.text;
+        const audio = document.getElementById("audioPlayer");
+        audio.src = result.voice_url;
+        audio.style.display = "block";
+        audio.play();
+      } else {
+        alert("Error: " + (result.error || "Something went wrong"));
+      }
+    };
   </script>
 </body>
 </html>
