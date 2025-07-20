@@ -1,3 +1,2 @@
-uvicorn[standard]
-openai
 fastapi
+uvicorn[standard]
