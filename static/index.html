@@ -1,40 +1,45 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Robo Teacher Voice Test</title>
-</head>
-<body>
-  <h2>Upload a Valid WAV File</h2>
-  <form id="uploadForm" enctype="multipart/form-data">
-    <input type="file" name="audio" accept=".wav" required>
-    <button type="submit">Upload & Listen</button>
-  </form>
+<h3>🎤 Speak to Robo Teacher</h3>
+<button onclick="startRecording()">Start Recording</button>
+<button onclick="stopRecording()">Stop & Send</button>
+<br><br>
+<audio id="audioPlayer" controls></audio>
 
-  <h3 id="responseText"></h3>
-  <audio id="audioPlayer" controls style="display: none;"></audio>
+<script>
+let mediaRecorder;
+let audioChunks = [];
 
-  <script>
-    document.getElementById("uploadForm").onsubmit = async function(e) {
-      e.preventDefault();
-      const formData = new FormData(this);
+async function startRecording() {
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  mediaRecorder = new MediaRecorder(stream);
 
-      const res = await fetch("/listen/", {
-        method: "POST",
-        body: formData,
-      });
+  mediaRecorder.start();
+  audioChunks = [];
 
-      const result = await res.json();
-      if (result.text) {
-        document.getElementById("responseText").innerText = result.text;
-        const audio = document.getElementById("audioPlayer");
-        audio.src = result.voice_url;
-        audio.style.display = "block";
-        audio.play();
-      } else {
-        alert("Error: " + (result.error || "Something went wrong"));
-      }
-    };
-  </script>
-</body>
-</html>
+  mediaRecorder.addEventListener("dataavailable", event => {
+    audioChunks.push(event.data);
+  });
+
+  console.log("Recording started");
+}
+
+async function stopRecording() {
+  mediaRecorder.stop();
+
+  mediaRecorder.addEventListener("stop", async () => {
+    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+    const formData = new FormData();
+    formData.append("file", audioBlob, "recording.wav");
+
+    const response = await fetch("/mic-upload", {
+      method: "POST",
+      body: formData
+    });
+
+    const result = await response.json();
+    alert("Robo Teacher: " + result.text);
+
+    const audioPlayer = document.getElementById("audioPlayer");
+    audioPlayer.src = result.audio_url;
+  });
+}
+</script>
