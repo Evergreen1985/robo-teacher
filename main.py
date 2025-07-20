@@ -4,4 +4,4 @@ app = FastAPI()
 
 @app.get("/")
 def home():
-    return {"message": "Welcome to Robo Teacher!"}
+    return {"message": "Welcome to Robo Teacher! Evergreen"}
