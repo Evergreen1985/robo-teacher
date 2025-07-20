@@ -1,0 +1,45 @@
+<h3>🎤 Speak to Robo Teacher</h3>
+<button onclick="startRecording()">Start Recording</button>
+<button onclick="stopRecording()">Stop & Send</button>
+<br><br>
+<audio id="audioPlayer" controls></audio>
+
+<script>
+let mediaRecorder;
+let audioChunks = [];
+
+async function startRecording() {
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  mediaRecorder = new MediaRecorder(stream);
+
+  mediaRecorder.start();
+  audioChunks = [];
+
+  mediaRecorder.addEventListener("dataavailable", event => {
+    audioChunks.push(event.data);
+  });
+
+  console.log("Recording started");
+}
+
+async function stopRecording() {
+  mediaRecorder.stop();
+
+  mediaRecorder.addEventListener("stop", async () => {
+    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+    const formData = new FormData();
+    formData.append("file", audioBlob, "recording.wav");
+
+    const response = await fetch("/mic-upload", {
+      method: "POST",
+      body: formData
+    });
+
+    const result = await response.json();
+    alert("Robo Teacher: " + result.text);
+
+    const audioPlayer = document.getElementById("audioPlayer");
+    audioPlayer.src = result.audio_url;
+  });
+}
+</script>
