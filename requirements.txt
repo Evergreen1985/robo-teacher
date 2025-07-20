@@ -1,2 +1,5 @@
 fastapi
-uvicorn[standard]
+uvicorn
+speechrecognition
+pydub
+gtts
