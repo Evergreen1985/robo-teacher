@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Robo Teacher Voice</title>
+</head>
+<body>
+  <h2>🎙️ Speak to Robo Teacher</h2>
+  <button onclick="startRecording()">Start Recording</button>
+  <button onclick="stopRecording()">Stop & Send</button>
+  <p id="status"></p>
+  <audio id="replyAudio" controls></audio>
+
+  <script>
+    let mediaRecorder;
+    let audioChunks = [];
+
+    async function startRecording() {
+      document.getElementById("status").innerText = "Recording...";
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.start();
+
+      mediaRecorder.ondataavailable = event => {
+        audioChunks.push(event.data);
+      };
+    }
+
+    function stopRecording() {
+      document.getElementById("status").innerText = "Processing...";
+      mediaRecorder.stop();
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+        const formData = new FormData();
+        formData.append('audio', audioBlob, 'input.wav');
+
+        const response = await fetch('/listen/', {
+          method: 'POST',
+          body: formData
+        });
+
+        const result = await response.json();
+        document.getElementById("status").innerText = "Robo replied!";
+        document.getElementById("replyAudio").src = result.voice_url;
+      };
+    }
+  </script>
+</body>
+</html>
