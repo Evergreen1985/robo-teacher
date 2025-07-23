@@ -1,2 +1,7 @@
 fastapi
-uvicorn[standard]
+uvicorn
+python-multipart
+jinja2
+speechrecognition
+pyttsx3
+pydub
