@@ -44,26 +44,27 @@ async def mic_upload(file: UploadFile = File(...)):
     os.remove(raw_input_path)
     os.remove(converted_wav_path)
 
-    # 🎵 Rhyme detection
     rhymes = {
-        "twinkle": "https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3",
-        "abc": "https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3",
-        "baa baa": "https://www2.cs.uic.edu/~i101/SoundFiles/BaaBaaBlackSheep.mp3"
+        "twinkle": {"type": "mp3", "url": "https://www2.cs.uic.edu/~i101/SoundFiles/TwinkleTwinkle.mp3"},
+        "abc": {"type": "mp3", "url": "https://www2.cs.uic.edu/~i101/SoundFiles/AlphabetSong.mp3"},
+        "baa baa": {"type": "mp3", "url": "https://www2.cs.uic.edu/~i101/SoundFiles/BaaBaaBlackSheep.mp3"},
+        "johnny": {"type": "youtube", "url": "https://www.youtube.com/embed/qnL0ZP9x7nY"}
     }
 
     text_lower = text.lower()
-    for key, url in rhymes.items():
+    for key, entry in rhymes.items():
         if key in text_lower:
             return JSONResponse(content={
-                "text": f"Sure! Playing the rhyme: {key.title()}",
-                "audio_url": url
+                "text": f"Sure! Playing {key.title()}",
+                "type": entry["type"],
+                "media_url": entry["url"]
             })
 
-    # 🤖 Default voice response
     tts = gTTS(text=text)
     tts.save(output_audio_path)
 
     return JSONResponse(content={
         "text": text,
-        "audio_url": f"/static/{os.path.basename(output_audio_path)}"
+        "type": "mp3",
+        "media_url": f"/static/{os.path.basename(output_audio_path)}"
     })
