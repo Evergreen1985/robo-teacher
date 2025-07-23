@@ -6,11 +6,11 @@ import speech_recognition as sr
 from gtts import gTTS
 import os
 import uuid
+import requests
 from pydub import AudioSegment
-import openai
 
-# Set your OpenAI API key (store securely in Render env variables)
-openai.api_key = os.getenv("OPENAI_API_KEY", "sk-REPLACE-YOUR-KEY")
+# Set your HuggingFace API key (store securely in Render env variables)
+HF_API_KEY = os.getenv("HF_API_KEY", "hf-REPLACE-YOUR-KEY")
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -28,15 +28,25 @@ rhymes = {
     }
 }
 
-# Function to query GPT
+# HuggingFace GPT fallback function
 def ask_gpt(prompt):
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}]
+        response = requests.post(
+            "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2",
+            headers={"Authorization": f"Bearer {HF_API_KEY}"},
+            json={"inputs": prompt}
         )
-        return response.choices[0].message.content.strip()
+        result = response.json()
+        if isinstance(result, list):
+            return result[0]["generated_text"]
+        elif isinstance(result, dict) and "generated_text" in result:
+            return result["generated_text"]
+        elif isinstance(result, dict) and "error" in result:
+            return f"Doodle couldn’t answer: {result['error']}"
+        else:
+            return "Doodle is still thinking..."
     except Exception as e:
+        print("HuggingFace error:", e)
         return "Sorry, Doodle couldn't think of an answer right now."
 
 # Homepage
@@ -75,7 +85,7 @@ async def mic_upload(file: UploadFile = File(...)):
                 "media_url": entry["url"]
             })
 
-    # Fallback to GPT
+    # Fallback to HuggingFace GPT
     gpt_response = ask_gpt(text)
     tts = gTTS(text=gpt_response)
     tts.save(temp_output_path)
