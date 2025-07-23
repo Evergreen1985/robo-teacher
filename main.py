@@ -32,22 +32,21 @@ rhymes = {
 def ask_gpt(prompt):
     try:
         response = requests.post(
-            "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2",
+            "https://api-inference.huggingface.co/models/google/flan-t5-small",
             headers={"Authorization": f"Bearer {HF_API_KEY}"},
             json={"inputs": prompt}
         )
         result = response.json()
-        if isinstance(result, list):
-            return result[0]["generated_text"]
-        elif isinstance(result, dict) and "generated_text" in result:
-            return result["generated_text"]
-        elif isinstance(result, dict) and "error" in result:
+        if isinstance(result, dict) and "error" in result:
             return f"Doodle couldn’t answer: {result['error']}"
+        elif isinstance(result, list):
+            return result[0]["generated_text"]
         else:
             return "Doodle is still thinking..."
     except Exception as e:
         print("HuggingFace error:", e)
         return "Sorry, Doodle couldn't think of an answer right now."
+
 
 # Homepage
 @app.get("/", response_class=HTMLResponse)
