@@ -1,6 +1,7 @@
 fastapi
 uvicorn
-speechrecognition
-gtts
-pydub
 python-multipart
+jinja2
+speechrecognition
+pyttsx3
+pydub
