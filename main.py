@@ -48,10 +48,10 @@ async def mic_upload(file: UploadFile = File(...)):
 
     # 🌟 Predefined rhymes (MP3/YouTube)
     rhymes = {
-        "twinkle": {"type": "mp3", "url": "https://youtu.be/yCjJyiqpAuU?si=ZNN4GCEmB8jXp9jL"},
+        "twinkle": {"type": "mp3", "url": "https://www.youtube.com/embed/yCjJyiqpAuU"},
         "abc": {"type": "mp3", "url": "https://www2.cs.uic.edu/~i101/SoundFiles/AlphabetSong.mp3"},
-        "baa baa": {"type": "mp3", "url": "https://www2.cs.uic.edu/~i101/SoundFiles/BaaBaaBlackSheep.mp3"},
-        "johnny": {"type": "youtube", "url": "https://www.youtube.com/embed/qnL0ZP9x7nY"}
+        "baa baa": {"type": "mp3", "url": "https://youtu.be/yCjJyiqpAuU?si=_G9dLIQ42hZxsr6r"},
+        "johnny": {"type": "youtube", "url": "https://www.youtube.com/embed/dZyxheCtYx8"}
     }
 
     for key, entry in rhymes.items():
