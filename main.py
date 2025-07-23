@@ -9,6 +9,7 @@ import uuid
 from pydub import AudioSegment
 
 app = FastAPI()
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
@@ -23,18 +24,15 @@ async def mic_upload(file: UploadFile = File(...)):
     converted_wav_path = f"temp_converted_{uuid.uuid4()}.wav"
     output_audio_path = f"static/response_{uuid.uuid4()}.mp3"
 
-    # Save raw input file
     with open(raw_input_path, "wb") as f:
         f.write(await file.read())
 
-    # Convert to WAV
     try:
         audio = AudioSegment.from_file(raw_input_path)
         audio.export(converted_wav_path, format="wav")
     except Exception as e:
         return JSONResponse(content={"error": "Conversion failed", "details": str(e)}, status_code=500)
 
-    # Transcribe
     recognizer = sr.Recognizer()
     with sr.AudioFile(converted_wav_path) as source:
         audio_data = recognizer.record(source)
@@ -43,13 +41,27 @@ async def mic_upload(file: UploadFile = File(...)):
         except Exception:
             text = "Sorry, I didn't catch that."
 
-    # Convert response to speech
-    tts = gTTS(text=text)
-    tts.save(output_audio_path)
-
-    # Cleanup
     os.remove(raw_input_path)
     os.remove(converted_wav_path)
+
+    # 🎵 Rhyme detection
+    rhymes = {
+        "twinkle": "https://www2.cs.uic.edu/~i101/SoundFiles/TwinkleTwinkle.mp3",
+        "abc": "https://www2.cs.uic.edu/~i101/SoundFiles/AlphabetSong.mp3",
+        "baa baa": "https://www2.cs.uic.edu/~i101/SoundFiles/BaaBaaBlackSheep.mp3"
+    }
+
+    text_lower = text.lower()
+    for key, url in rhymes.items():
+        if key in text_lower:
+            return JSONResponse(content={
+                "text": f"Sure! Playing the rhyme: {key.title()}",
+                "audio_url": url
+            })
+
+    # 🤖 Default voice response
+    tts = gTTS(text=text)
+    tts.save(output_audio_path)
 
     return JSONResponse(content={
         "text": text,
