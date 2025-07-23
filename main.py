@@ -46,8 +46,8 @@ async def mic_upload(file: UploadFile = File(...)):
 
     # 🎵 Rhyme detection
     rhymes = {
-        "twinkle": "https://www2.cs.uic.edu/~i101/SoundFiles/TwinkleTwinkle.mp3",
-        "abc": "https://www2.cs.uic.edu/~i101/SoundFiles/AlphabetSong.mp3",
+        "twinkle": "https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3",
+        "abc": "https://www.learningcontainer.com/wp-content/uploads/2020/02/Kalimba.mp3",
         "baa baa": "https://www2.cs.uic.edu/~i101/SoundFiles/BaaBaaBlackSheep.mp3"
     }
 
