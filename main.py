@@ -17,7 +17,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 # Predefined rhymes
- rhymes = {
+rhymes = {
     "twinkle": {
         "type": "youtube",
         "url": "https://www.youtube.com/embed/yCjJyiqpAuU?autoplay=1&mute=0"
