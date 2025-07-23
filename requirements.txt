@@ -7,3 +7,4 @@ speechrecognition
 pyttsx3
 pydub
 gtts
+requests
