@@ -17,7 +17,10 @@
   <p id="status">Waiting for your voice...</p>
   <p><strong>Heard:</strong> <span id="transcription">...</span></p>
   <audio id="audio" controls style="display:none; margin-top: 10px;"></audio>
-  <iframe id="youtubePlayer" width="300" height="180" style="display:none;" allowfullscreen></iframe>
+<div class="youtube-wrapper">
+  <iframe id="youtubePlayer" width="300" height="180" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+  <div class="unmute-prompt" id="ytPrompt" style="display:none;">🔈 Tap video to hear Doodle sing</div>
+</div>
 
   <h3>✨ You can ask Doodle to play:</h3>
   <ul>
@@ -66,9 +69,10 @@
           audioEl.style.display = "block";
           audioEl.play();
         } else if (data.type === "youtube") {
-          audioEl.style.display = "none";
-          youtubeEl.src = data.media_url;
-          youtubeEl.style.display = "block";
+           audioEl.style.display = "none";
+  youtubeEl.src = data.media_url;
+  youtubeEl.style.display = "block";
+  ytPrompt.style.display = "block";
         }
         status.innerText = "✅ Response ready!";
       };
