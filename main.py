@@ -44,22 +44,25 @@ async def mic_upload(file: UploadFile = File(...)):
     os.remove(raw_input_path)
     os.remove(converted_wav_path)
 
+    text_lower = text.lower()
+
+    # 🌟 Predefined rhymes (MP3/YouTube)
     rhymes = {
-        "twinkle": {"type": "mp3", "url": "https://www2.cs.uic.edu/~i101/SoundFiles/TwinkleTwinkle.mp3"},
+        "twinkle": {"type": "mp3", "url": "https://youtu.be/yCjJyiqpAuU?si=ZNN4GCEmB8jXp9jL"},
         "abc": {"type": "mp3", "url": "https://www2.cs.uic.edu/~i101/SoundFiles/AlphabetSong.mp3"},
         "baa baa": {"type": "mp3", "url": "https://www2.cs.uic.edu/~i101/SoundFiles/BaaBaaBlackSheep.mp3"},
         "johnny": {"type": "youtube", "url": "https://www.youtube.com/embed/qnL0ZP9x7nY"}
     }
 
-    text_lower = text.lower()
     for key, entry in rhymes.items():
         if key in text_lower:
             return JSONResponse(content={
-                "text": f"Sure! Playing {key.title()}",
+                "text": f"Sure! Playing the rhyme: {key.title()}",
                 "type": entry["type"],
                 "media_url": entry["url"]
             })
 
+    # 🗣️ Fallback: convert what child said to TTS
     tts = gTTS(text=text)
     tts.save(output_audio_path)
 
