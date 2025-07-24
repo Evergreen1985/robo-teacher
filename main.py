@@ -31,12 +31,10 @@ rhymes = {
 # HuggingFace GPT fallback function
 def ask_gpt(prompt):
     try:
-        print("🔐 Using HF_API_KEY:", HF_API_KEY)
-
         prompt = f"Answer like a friendly children's teacher: {prompt}"
 
         response = requests.post(
-            "https://api-inference.huggingface.co/models/google/flan-t5-small",
+            "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.1",
             headers={"Authorization": f"Bearer {HF_API_KEY}"},
             json={"inputs": prompt}
         )
@@ -55,10 +53,11 @@ def ask_gpt(prompt):
             return result["generated_text"]
         else:
             return "Doodle is still thinking..."
-    
+
     except Exception as e:
         print("❌ HuggingFace error:", e)
         return "Sorry, Doodle couldn't think of an answer right now."
+
 
 
 
