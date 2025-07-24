@@ -31,6 +31,8 @@ rhymes = {
 # HuggingFace GPT fallback function
 def ask_gpt(prompt):
     try:
+        print("🔐 Using HF_API_KEY:", HF_API_KEY)
+
         prompt = f"Answer like a friendly children's teacher: {prompt}"
 
         response = requests.post(
@@ -38,7 +40,7 @@ def ask_gpt(prompt):
             headers={"Authorization": f"Bearer {HF_API_KEY}"},
             json={"inputs": prompt}
         )
-print("🔐 Using HF_API_KEY:", HF_API_KEY)
+
         print("🧠 GPT STATUS:", response.status_code)
         print("🧠 GPT RESPONSE:", response.text)
 
@@ -46,7 +48,6 @@ print("🔐 Using HF_API_KEY:", HF_API_KEY)
             return f"Doodle couldn’t answer (HTTP {response.status_code})"
 
         result = response.json()
-print("🔐 Using result:", result)
 
         if isinstance(result, list) and "generated_text" in result[0]:
             return result[0]["generated_text"]
@@ -54,9 +55,11 @@ print("🔐 Using result:", result)
             return result["generated_text"]
         else:
             return "Doodle is still thinking..."
+    
     except Exception as e:
-        print("HuggingFace error:", e)
+        print("❌ HuggingFace error:", e)
         return "Sorry, Doodle couldn't think of an answer right now."
+
 
 
 
