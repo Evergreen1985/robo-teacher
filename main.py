@@ -11,7 +11,7 @@ import uuid
 import requests
 import torch
 
-# Set your HuggingFace API key (store securely in Render env variables)
+# Set your HuggingFace API key (optional fallback later)
 HF_API_KEY = os.getenv("HF_API_KEY", "")
 
 app = FastAPI()
@@ -30,25 +30,20 @@ rhymes = {
     }
 }
 
-# Load model and tokenizer once (at startup)
+# Load small GPT model
 tokenizer = AutoTokenizer.from_pretrained("sshleifer/tiny-gpt2")
 model = AutoModelForCausalLM.from_pretrained("sshleifer/tiny-gpt2")
 
-# HuggingFace GPT fallback function
+# Local GPT fallback
 def ask_gpt(prompt):
     try:
         input_ids = tokenizer(prompt, return_tensors="pt").input_ids
-        output_ids = model.generate(input_ids, max_new_tokens=50)
+        output_ids = model.generate(input_ids, max_new_tokens=50, pad_token_id=tokenizer.eos_token_id)
         response = tokenizer.decode(output_ids[0], skip_special_tokens=True)
         return response
     except Exception as e:
-        print("❌ Local tiny-GPT error:", e)
+        print("❌ GPT fallback error:", e)
         return "Sorry, Doodle couldn't think of an answer right now."
-
-
-
-
-
 
 # Homepage
 @app.get("/", response_class=HTMLResponse)
@@ -71,23 +66,38 @@ async def mic_upload(file: UploadFile = File(...)):
         with sr.AudioFile(temp_input_path) as source:
             audio = recognizer.record(source)
             text = recognizer.recognize_google(audio)
+            print("🎤 Transcript:", text)
     except Exception as e:
-        text = "Sorry, I didn't catch that."
+        print("❌ Speech recognition error:", e)
+        text = None
 
     os.remove(temp_input_path)
+
+    # If speech recognition failed
+    if not text:
+        fallback_msg = "Sorry, I didn't catch that."
+        tts = gTTS(text=fallback_msg)
+        tts.save(temp_output_path)
+        return JSONResponse(content={
+            "text": fallback_msg,
+            "type": "mp3",
+            "media_url": f"/static/{os.path.basename(temp_output_path)}"
+        })
+
     text_lower = text.lower()
 
     # Match rhymes
     for key, entry in rhymes.items():
         if key in text_lower:
+            print(f"✅ Rhyme matched: {key}")
             return JSONResponse(content={
                 "text": f"Sure! Playing the rhyme: {key.title()}",
                 "type": entry["type"],
                 "media_url": entry["url"]
             })
 
-    # Fallback to HuggingFace GPT
-    gpt_response = ask_gpt(text)
+    # Fallback to GPT
+    gpt_response = ask_gpt(f"Answer like a children's teacher: {text}")
     tts = gTTS(text=gpt_response)
     tts.save(temp_output_path)
 
