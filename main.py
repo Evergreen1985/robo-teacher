@@ -10,7 +10,7 @@ import requests
 from pydub import AudioSegment
 
 # Set your HuggingFace API key (store securely in Render env variables)
-HF_API_KEY = "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"
+HF_API_KEY = "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"
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
