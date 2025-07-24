@@ -31,20 +31,19 @@ rhymes = {
 }
 
 # Load model and tokenizer once (at startup)
-tokenizer = AutoTokenizer.from_pretrained("google/flan-t5-small")
-model = AutoModelForSeq2SeqLM.from_pretrained("google/flan-t5-small")
+tokenizer = AutoTokenizer.from_pretrained("sshleifer/tiny-gpt2")
+model = AutoModelForCausalLM.from_pretrained("sshleifer/tiny-gpt2")
 
 # HuggingFace GPT fallback function
 def ask_gpt(prompt):
     try:
-        prompt = f"Answer like a friendly children's teacher: {prompt}"
-        input_ids = tokenizer(prompt, return_tensors="pt").input_ids
-        outputs = model.generate(input_ids, max_new_tokens=50)
+        inputs = tokenizer(prompt, return_tensors="pt")
+        outputs = model.generate(inputs.input_ids, max_new_tokens=50)
         response = tokenizer.decode(outputs[0], skip_special_tokens=True)
         return response
     except Exception as e:
-        print("❌ Local GPT error:", e)
-        return "Sorry, Doodle couldn't think of an answer right now."
+        print("GPT Error:", e)
+        return "Doodle couldn't answer right now."
 
 
 
