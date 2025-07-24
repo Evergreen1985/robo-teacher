@@ -34,7 +34,7 @@ def ask_gpt(prompt):
         prompt = f"Answer like a friendly children's teacher: {prompt}"
 
         response = requests.post(
-            "https://api-inference.huggingface.co/models/tiiuae/falcon-rw-1b",
+            "https://api-inference.huggingface.co/models/bigscience/bloomz-560m",
             headers={"Authorization": f"Bearer {HF_API_KEY}"},
             json={"inputs": prompt}
         )
