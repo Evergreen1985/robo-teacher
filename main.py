@@ -2,12 +2,15 @@ from fastapi import FastAPI, Request, UploadFile, File
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from pydub import AudioSegment
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+from gtts
 import speech_recognition as sr
-from gtts import gTTS
+import gTTS
 import os
 import uuid
 import requests
-from pydub import AudioSegment
+import torch
 
 # Set your HuggingFace API key (store securely in Render env variables)
 HF_API_KEY = os.getenv("HF_API_KEY", "")
@@ -28,34 +31,36 @@ rhymes = {
     }
 }
 
+# Load model and tokenizer once (at startup)
+tokenizer = AutoTokenizer.from_pretrained("google/flan-t5-base")
+model = AutoModelForSeq2SeqLM.from_pretrained("google/flan-t5-base")
+
 # HuggingFace GPT fallback function
 def ask_gpt(prompt):
     try:
-        prompt = f"Answer like a friendly children's teacher: {prompt}"
+        full_prompt = f"Answer like a friendly children's teacher: {prompt}"
+        print("🧠 Local Prompt:", full_prompt)
 
-        response = requests.post(
-            "https://api-inference.huggingface.co/models/google/flan-t5-base",
-            headers={"Authorization": f"Bearer {HF_API_KEY}"},
-            json={"inputs": prompt}
+        # Tokenize input
+        inputs = tokenizer(full_prompt, return_tensors="pt")
+
+        # Generate output
+        outputs = model.generate(
+            inputs["input_ids"],
+            max_length=100,
+            num_return_sequences=1,
+            do_sample=True,
+            top_k=50,
+            top_p=0.95,
+            temperature=0.8
         )
 
-        print("🧠 GPT STATUS:", response.status_code)
-        print("🧠 GPT RESPONSE:", response.text)
-
-        if response.status_code != 200:
-            return f"Doodle couldn’t answer (HTTP {response.status_code})"
-
-        result = response.json()
-
-        if isinstance(result, list) and "generated_text" in result[0]:
-            return result[0]["generated_text"]
-        elif isinstance(result, dict) and "generated_text" in result:
-            return result["generated_text"]
-        else:
-            return "Doodle is still thinking..."
+        # Decode output
+        decoded = tokenizer.decode(outputs[0], skip_special_tokens=True)
+        return decoded
 
     except Exception as e:
-        print("❌ HuggingFace error:", e)
+        print("❌ Local model error:", e)
         return "Sorry, Doodle couldn't think of an answer right now."
 
 
