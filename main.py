@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydub import AudioSegment
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+from transformers import AutoTokenizer, AutoModelForCausalLM
 import speech_recognition as sr
 from gtts import gTTS
 import os
@@ -37,13 +37,13 @@ model = AutoModelForCausalLM.from_pretrained("sshleifer/tiny-gpt2")
 # HuggingFace GPT fallback function
 def ask_gpt(prompt):
     try:
-        inputs = tokenizer(prompt, return_tensors="pt")
-        outputs = model.generate(inputs.input_ids, max_new_tokens=50)
-        response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+        input_ids = tokenizer(prompt, return_tensors="pt").input_ids
+        output_ids = model.generate(input_ids, max_new_tokens=50)
+        response = tokenizer.decode(output_ids[0], skip_special_tokens=True)
         return response
     except Exception as e:
-        print("GPT Error:", e)
-        return "Doodle couldn't answer right now."
+        print("❌ Local tiny-GPT error:", e)
+        return "Sorry, Doodle couldn't think of an answer right now."
 
 
 
