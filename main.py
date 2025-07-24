@@ -4,9 +4,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydub import AudioSegment
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
-from gtts
 import speech_recognition as sr
-import gTTS
+from gtts import gTTS
 import os
 import uuid
 import requests
