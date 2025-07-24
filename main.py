@@ -10,7 +10,7 @@ import requests
 from pydub import AudioSegment
 
 # Set your HuggingFace API key (store securely in Render env variables)
-HF_API_KEY = "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"
+HF_API_KEY = "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"
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -34,7 +34,7 @@ def ask_gpt(prompt):
         prompt = f"Answer like a friendly children's teacher: {prompt}"
 
         response = requests.post(
-            "https://api-inference.huggingface.co/models/bigscience/bloomz-560m",
+            "https://api-inference.huggingface.co/models/google/flan-t5-small",
             headers={"Authorization": f"Bearer {HF_API_KEY}"},
             json={"inputs": prompt}
         )
