@@ -38,7 +38,7 @@ def ask_gpt(prompt):
             headers={"Authorization": f"Bearer {HF_API_KEY}"},
             json={"inputs": prompt}
         )
-
+print("🔐 Using HF_API_KEY:", HF_API_KEY)
         print("🧠 GPT STATUS:", response.status_code)
         print("🧠 GPT RESPONSE:", response.text)
 
@@ -46,6 +46,7 @@ def ask_gpt(prompt):
             return f"Doodle couldn’t answer (HTTP {response.status_code})"
 
         result = response.json()
+print("🔐 Using result:", result)
 
         if isinstance(result, list) and "generated_text" in result[0]:
             return result[0]["generated_text"]
