@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, UploadFile, File
+from fastapi import FastAPI, Request, UploadFile, File, Body
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -8,7 +8,6 @@ import speech_recognition as sr
 from gtts import gTTS
 import os
 import uuid
-import requests
 import torch
 
 # Set your HuggingFace API key (optional fallback later)
@@ -34,7 +33,7 @@ rhymes = {
 tokenizer = AutoTokenizer.from_pretrained("sshleifer/tiny-gpt2")
 model = AutoModelForCausalLM.from_pretrained("sshleifer/tiny-gpt2")
 
-# Local GPT fallback
+# GPT fallback
 def ask_gpt(prompt):
     try:
         input_ids = tokenizer(prompt, return_tensors="pt").input_ids
@@ -50,7 +49,7 @@ def ask_gpt(prompt):
 async def root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
-# Mic upload route
+# Mic upload
 @app.post("/mic-upload")
 async def mic_upload(file: UploadFile = File(...)):
     temp_input_path = f"temp_{uuid.uuid4()}.wav"
@@ -73,13 +72,13 @@ async def mic_upload(file: UploadFile = File(...)):
 
     os.remove(temp_input_path)
 
-    # If speech recognition failed
     if not text:
         fallback_msg = "Sorry, I didn't catch that."
         tts = gTTS(text=fallback_msg)
         tts.save(temp_output_path)
         return JSONResponse(content={
             "text": fallback_msg,
+            "original_text": "",
             "type": "mp3",
             "media_url": f"/static/{os.path.basename(temp_output_path)}"
         })
@@ -92,17 +91,34 @@ async def mic_upload(file: UploadFile = File(...)):
             print(f"✅ Rhyme matched: {key}")
             return JSONResponse(content={
                 "text": f"Sure! Playing the rhyme: {key.title()}",
+                "original_text": text,
                 "type": entry["type"],
                 "media_url": entry["url"]
             })
 
-    # Fallback to GPT
+    # GPT Fallback
     gpt_response = ask_gpt(f"Answer like a children's teacher: {text}")
     tts = gTTS(text=gpt_response)
     tts.save(temp_output_path)
 
     return JSONResponse(content={
         "text": gpt_response,
+        "original_text": text,
         "type": "mp3",
         "media_url": f"/static/{os.path.basename(temp_output_path)}"
     })
+
+# Edited input processing
+@app.post("/ask-edited")
+async def ask_edited(body: dict = Body(...)):
+    text = body.get("text", "").lower()
+    temp_output_path = f"static/response_{uuid.uuid4()}.mp3"
+
+    # Match rhymes again
+    for key, entry in rhymes.items():
+        if key in text:
+            return JSONResponse(content={
+                "text": f"Sure! Playing the rhyme: {key.title()}",
+                "type": entry["type"],
+                "media_url": entry["url"]
+            }
