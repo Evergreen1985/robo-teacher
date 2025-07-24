@@ -31,35 +31,19 @@ rhymes = {
 }
 
 # Load model and tokenizer once (at startup)
-tokenizer = AutoTokenizer.from_pretrained("google/flan-t5-base")
-model = AutoModelForSeq2SeqLM.from_pretrained("google/flan-t5-base")
+tokenizer = AutoTokenizer.from_pretrained("google/flan-t5-small")
+model = AutoModelForSeq2SeqLM.from_pretrained("google/flan-t5-small")
 
 # HuggingFace GPT fallback function
 def ask_gpt(prompt):
     try:
-        full_prompt = f"Answer like a friendly children's teacher: {prompt}"
-        print("🧠 Local Prompt:", full_prompt)
-
-        # Tokenize input
-        inputs = tokenizer(full_prompt, return_tensors="pt")
-
-        # Generate output
-        outputs = model.generate(
-            inputs["input_ids"],
-            max_length=100,
-            num_return_sequences=1,
-            do_sample=True,
-            top_k=50,
-            top_p=0.95,
-            temperature=0.8
-        )
-
-        # Decode output
-        decoded = tokenizer.decode(outputs[0], skip_special_tokens=True)
-        return decoded
-
+        prompt = f"Answer like a friendly children's teacher: {prompt}"
+        input_ids = tokenizer(prompt, return_tensors="pt").input_ids
+        outputs = model.generate(input_ids, max_new_tokens=50)
+        response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+        return response
     except Exception as e:
-        print("❌ Local model error:", e)
+        print("❌ Local GPT error:", e)
         return "Sorry, Doodle couldn't think of an answer right now."
 
 
