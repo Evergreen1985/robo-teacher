@@ -39,6 +39,9 @@ def ask_gpt(prompt):
             json={"inputs": prompt}
         )
 
+        print("🧠 GPT STATUS:", response.status_code)
+        print("🧠 GPT RESPONSE:", response.text)
+
         if response.status_code != 200:
             return f"Doodle couldn’t answer (HTTP {response.status_code})"
 
