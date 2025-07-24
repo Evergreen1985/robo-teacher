@@ -8,3 +8,5 @@ pyttsx3
 pydub
 gtts
 requests
+transformers
+torch
